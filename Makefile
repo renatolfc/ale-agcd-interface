@@ -7,7 +7,12 @@ OBJS := $(addprefix $(OBJDIR)/,ale_interface.o Settings.o agcd_interface.o)
 CXXFLAGS := -O2 -march=native -pipe -fPIC -pie $(CXXFLAGS) 
 LDFLAGS := -lz -lpng -lm $(LDFLAGS)
 CXX := g++ -std=c++11
-LIBALE := libale.so
+
+ifeq ($(CLION_EXE_DIR),)
+	CLION_EXE_DIR := .
+endif
+
+LIBALE := $(CLION_EXE_DIR)/libale.so
 
 $(OBJDIR)/%.o : src/%.cpp
 	$(CXX) $(CXXFLAGS) $< -c -o $@
@@ -24,3 +29,5 @@ $(LIBALE): $(OBJS)
 
 clean:
 	rm -fr $(OBJDIR) $(LIBALE)
+
+ale: $(LIBALE)
