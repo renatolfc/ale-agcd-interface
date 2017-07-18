@@ -4,9 +4,8 @@
 
 OBJDIR := obj
 OBJS := $(addprefix $(OBJDIR)/,ale_interface.o Settings.o agcd_interface.o)
-CXXFLAGS := -O2 -march=native -pipe -fPIC -pie $(CXXFLAGS) 
+CXXFLAGS := -O3 -march=native -pipe -fPIC -pie $(CXXFLAGS) -std=c++11
 LDFLAGS := -lz -lpng -lm $(LDFLAGS)
-CXX := g++ -std=c++11
 
 ifeq ($(CLION_EXE_DIR),)
 	CLION_EXE_DIR := .
