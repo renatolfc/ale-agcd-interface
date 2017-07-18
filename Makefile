@@ -24,7 +24,7 @@ $(OBJDIR):
 	mkdir $(OBJDIR)
 
 $(LIBALE): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(OBJS) -shared -o $(LIBALE)
+	$(CXX) $(OBJS) $(LDFLAGS) -shared -o $(LIBALE)
 
 clean:
 	rm -fr $(OBJDIR) $(LIBALE)
