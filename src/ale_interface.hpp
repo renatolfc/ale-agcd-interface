@@ -160,7 +160,7 @@ public:
     }
 
 protected:
-    std::auto_ptr<Settings> theSettings;
+    std::unique_ptr<Settings> theSettings;
     int max_num_frames; // Maximum number of frames for each episode
     AtariState *atariState = NULL;
     std::string romPath;
