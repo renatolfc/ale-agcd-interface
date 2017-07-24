@@ -104,7 +104,7 @@ public:
     int getFrameNumber();
 
     // The remaining number of lives.
-    inline const int lives() {
+    inline int lives() {
         // We are just replaying from a trace and can't know how many lives we have. So we always return 0.
         return 0;
     }
