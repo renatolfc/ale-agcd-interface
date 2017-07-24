@@ -165,7 +165,8 @@ protected:
     AtariState *atariState = NULL;
     std::string romPath;
     ALERAM fakeRam;
-    ActionVect actions;
+    ActionVect minimalActions;
+    ActionVect allActions;
 
 public:
     // Display ALE welcome message

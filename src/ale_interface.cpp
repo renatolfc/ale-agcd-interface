@@ -2,6 +2,37 @@
 
 #include <iostream>
 
+const Action SPACE_INVADERS_MINIMAL[] = {
+        PLAYER_A_NOOP, PLAYER_A_LEFT, PLAYER_A_RIGHT, PLAYER_A_FIRE,
+        PLAYER_A_LEFTFIRE, PLAYER_A_RIGHTFIRE
+};
+
+const Action MS_PACMAN_MINIMAL[] = {
+        PLAYER_A_NOOP, PLAYER_A_UP, PLAYER_A_RIGHT, PLAYER_A_LEFT,
+        PLAYER_A_DOWN, PLAYER_A_UPRIGHT, PLAYER_A_UPLEFT, PLAYER_A_DOWNRIGHT,
+        PLAYER_A_DOWNLEFT
+};
+
+const Action Q_BERT_MINIMAL[] = {
+        PLAYER_A_NOOP, PLAYER_A_FIRE, PLAYER_A_UP, PLAYER_A_RIGHT,
+        PLAYER_A_LEFT, PLAYER_A_DOWN
+};
+
+const Action REVENGE_MINIMAL[] = {
+        PLAYER_A_NOOP, PLAYER_A_FIRE, PLAYER_A_UP, PLAYER_A_RIGHT,
+        PLAYER_A_LEFT, PLAYER_A_DOWN, PLAYER_A_UPRIGHT, PLAYER_A_UPLEFT,
+        PLAYER_A_DOWNRIGHT, PLAYER_A_DOWNLEFT, PLAYER_A_UPFIRE,
+        PLAYER_A_RIGHTFIRE, PLAYER_A_LEFTFIRE, PLAYER_A_DOWNFIRE,
+        PLAYER_A_UPRIGHTFIRE, PLAYER_A_UPLEFTFIRE, PLAYER_A_DOWNRIGHTFIRE,
+        PLAYER_A_DOWNLEFTFIRE,
+};
+
+const Action PINBALL_MINIMAL[] = {
+        PLAYER_A_NOOP, PLAYER_A_FIRE, PLAYER_A_UP, PLAYER_A_RIGHT,
+        PLAYER_A_LEFT, PLAYER_A_DOWN, PLAYER_A_UPFIRE, PLAYER_A_RIGHTFIRE,
+        PLAYER_A_LEFTFIRE,
+};
+
 reward_t ALEInterface::act(Action action) {
     reward_t reward = atariState->getNextReward();
     atariState->step();
@@ -16,14 +47,10 @@ ALEInterface::~ALEInterface() {
 
 ALEInterface::ALEInterface() {
     theSettings.reset(new Settings);
-    for (int i = 0 ; i < PLAYER_B_NOOP ; i++)
-        actions.push_back((Action)i);
 }
 
 ALEInterface::ALEInterface(bool display_screen) {
     theSettings.reset(new Settings);
-    for (int i = 0 ; i < PLAYER_B_NOOP ; i++)
-        actions.push_back((Action)i);
 }
 
 // Get the value of a setting.
@@ -111,6 +138,32 @@ void ALEInterface::loadROM(std::string rom_file) {
     }
     atariState = new AtariState(rom_file);
     romPath = rom_file;
+    minimalActions.clear();
+    allActions.clear();
+
+    for (int i = 0 ; i < PLAYER_B_NOOP ; i++) {
+        allActions.push_back((Action) i);
+    }
+
+    if (rom_file.find("mspacman") != std::string::npos) {
+        minimalActions = ActionVect(std::begin(MS_PACMAN_MINIMAL), std::end
+                (MS_PACMAN_MINIMAL));
+    } else if (rom_file.find("pinball") != std::string::npos) {
+        minimalActions = ActionVect(std::begin(PINBALL_MINIMAL), std::end
+                (PINBALL_MINIMAL));
+    } else if (rom_file.find("qbert") != std::string::npos) {
+        minimalActions = ActionVect(std::begin(Q_BERT_MINIMAL), std::end
+                (Q_BERT_MINIMAL));
+    } else if (rom_file.find("revenge") != std::string::npos) {
+        minimalActions = ActionVect(std::begin(REVENGE_MINIMAL), std::end
+                (REVENGE_MINIMAL));
+    } else if (rom_file.find("spaceinvaders") != std::string::npos) {
+        minimalActions = ActionVect(std::begin(SPACE_INVADERS_MINIMAL),
+                       std::end(SPACE_INVADERS_MINIMAL));
+    } else {
+        printf("Unknown ROM found. Loading default actions.");
+        minimalActions = allActions;
+    }
 }
 
 bool ALEInterface::game_over() const {
@@ -126,11 +179,11 @@ void ALEInterface::reset_game() {
 }
 
 ActionVect ALEInterface::getLegalActionSet() {
-    return actions;
+    return allActions;
 }
 
 ActionVect ALEInterface::getMinimalActionSet() {
-    return actions;
+    return minimalActions;
 }
 
 int ALEInterface::getFrameNumber() {
