@@ -146,22 +146,27 @@ void ALEInterface::loadROM(std::string rom_file) {
     }
 
     if (rom_file.find("mspacman") != std::string::npos) {
+        printf("Loading Ms. PacMan actions...\n");
         minimalActions = ActionVect(std::begin(MS_PACMAN_MINIMAL), std::end
                 (MS_PACMAN_MINIMAL));
     } else if (rom_file.find("pinball") != std::string::npos) {
+        printf("Loading Pinball actions...\n");
         minimalActions = ActionVect(std::begin(PINBALL_MINIMAL), std::end
                 (PINBALL_MINIMAL));
     } else if (rom_file.find("qbert") != std::string::npos) {
+        printf("Loading QBert actions...\n");
         minimalActions = ActionVect(std::begin(Q_BERT_MINIMAL), std::end
                 (Q_BERT_MINIMAL));
     } else if (rom_file.find("revenge") != std::string::npos) {
+        printf("Loading Montezuma's Revenge actions...\n");
         minimalActions = ActionVect(std::begin(REVENGE_MINIMAL), std::end
                 (REVENGE_MINIMAL));
     } else if (rom_file.find("spaceinvaders") != std::string::npos) {
+        printf("Loading Space Invaders actions...\n");
         minimalActions = ActionVect(std::begin(SPACE_INVADERS_MINIMAL),
                        std::end(SPACE_INVADERS_MINIMAL));
     } else {
-        printf("Unknown ROM found. Loading default actions.");
+        printf("Unknown ROM found. Loading default actions...\n");
         minimalActions = allActions;
     }
 }
