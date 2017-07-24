@@ -849,7 +849,12 @@ inline void AtariState::read_data() {
             }
         }
         frames.push_back(current);
-        loadScreen(j++);
+    }
+
+    fclose(fp);
+
+    for (i = 0; i < j; i++) {
+        loadScreen(i);
     }
 }
 
@@ -882,7 +887,6 @@ ALEScreen &AtariState::getScreen() {
 }
 
 inline void AtariState::loadScreen(size_t offset) {
-    ALEInterface ale;
     std::vector<pixel_t> screen;
     png_data_t data = read_png_file(frames[offset].frame_path.c_str());
     process_png_file(screen, data);
