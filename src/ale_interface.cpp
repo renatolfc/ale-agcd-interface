@@ -253,7 +253,7 @@ void ALEInterface::saveScreenPNG(const std::string &filename) {
 }
 
 std::string ALEInterface::welcomeMessage() {
-    return std::__cxx11::string();
+    return "";
 }
 
 void ALEInterface::disableBufferedIO() {
