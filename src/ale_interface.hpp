@@ -165,6 +165,7 @@ protected:
     ALERAM fakeRam;
     ActionVect minimalActions;
     ActionVect allActions;
+    int frame_skip = 1;
 
 public:
     // Display ALE welcome message

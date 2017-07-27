@@ -34,8 +34,11 @@ const Action PINBALL_MINIMAL[] = {
 };
 
 reward_t ALEInterface::act(Action action) {
-    reward_t reward = atariState->getNextReward();
-    atariState->step();
+    reward_t reward = 0;
+    for (size_t i = 0; i < frame_skip; i++) {
+        reward += atariState->getNextReward();
+        atariState->step();
+    }
     return reward;
 }
 
@@ -47,6 +50,7 @@ ALEInterface::~ALEInterface() {
 
 ALEInterface::ALEInterface() {
     theSettings.reset(new Settings);
+    setInt("frame_skip", 1);
 }
 
 ALEInterface::ALEInterface(bool display_screen) {
@@ -140,6 +144,11 @@ void ALEInterface::loadROM(std::string rom_file) {
     romPath = rom_file;
     minimalActions.clear();
     allActions.clear();
+
+    frame_skip = getInt("frame_skip");
+    if (frame_skip < 1) {
+        frame_skip = 1;
+    }
 
     for (int i = 0 ; i < PLAYER_B_NOOP ; i++) {
         allActions.push_back((Action) i);
