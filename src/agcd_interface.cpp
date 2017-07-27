@@ -849,12 +849,7 @@ inline void AtariState::read_data() {
             }
         }
         frames.push_back(current);
-    }
-
-    fclose(fp);
-
-    for (i = 0; i < j; i++) {
-        loadScreen(i);
+        loadScreen(j++);
     }
 }
 
