@@ -29,6 +29,7 @@ typedef unsigned char pixel_t;
 class ALEScreen {
     friend class AtariState;
     friend class ALEInterface;
+    friend class PhosphorBlend;
 
 public:
     ALEScreen(int h, int w);

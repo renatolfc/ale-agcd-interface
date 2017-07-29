@@ -24,6 +24,7 @@
 
 #include "ale_interface.hpp"
 #include "agcd_interface.hpp"
+#include "phosphor_blend.hpp"
 
 #ifdef WIN32
 const char path_separator = '\\';
@@ -737,9 +738,8 @@ static inline int episode_number(const std::string &path) {
     return atoi(path.c_str() + offset + 1);
 }
 
-AtariState::AtariState(const std::string &path) : base_path(abspath(path)),
-                                                  current_frame(0),
-                                                  screen(210, 160)
+AtariState::AtariState(const std::string &path, bool average) : base_path(abspath(path)),
+                                                                current_frame(0)
 {
     std::vector<std::string> screens;
     if (strstr(base_path.c_str(), SCREENS) == NULL) {
@@ -784,7 +784,7 @@ AtariState::AtariState(const std::string &path) : base_path(abspath(path)),
 
     free(tmp);
 
-    read_data();
+    read_data(average);
 }
 
 inline static char *get_line(char *str, size_t strsize, FILE *fp) {
@@ -804,7 +804,7 @@ inline static char *get_line(char *str, size_t strsize, FILE *fp) {
     }
 }
 
-inline void AtariState::read_data() {
+inline void AtariState::read_data(bool average) {
     char c;
     char buffer[512];
     FILE *fp = fopen(base_path.c_str(), "r");
@@ -813,6 +813,7 @@ inline void AtariState::read_data() {
     get_line(buffer, 512, fp);
     /* }}} */
     std::string last_accessible_path;
+    PhosphorBlend phosphor;
 
     int i;
     size_t j = 0;
@@ -850,6 +851,15 @@ inline void AtariState::read_data() {
         }
         frames.push_back(current);
         loadScreen(j++);
+        if (average) {
+            if (j > 1) {
+                std::vector<pixel_t> tmp = current.screen.m_pixels;
+                phosphor.process(current.screen, previousScreen, current.screen.m_pixels);
+                previousScreen = tmp;
+            } else {
+                previousScreen = current.screen.m_pixels;
+            }
+        }
     }
     fclose(fp);
 }
@@ -879,14 +889,14 @@ bool AtariState::isTerminal() {
 }
 
 ALEScreen &AtariState::getScreen() {
-    return screen;
+    return frames[current_frame].screen;
 }
 
 inline void AtariState::loadScreen(size_t offset) {
     std::vector<pixel_t> screen;
     png_data_t data = read_png_file(frames[offset].frame_path.c_str());
     process_png_file(screen, data);
-    this->screen.m_pixels = screen;
+    frames[offset].screen.m_pixels = screen;
     free_png_data(data);
 }
 

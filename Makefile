@@ -3,7 +3,7 @@
 .PHONY=clean
 
 OBJDIR := obj
-OBJS := $(addprefix $(OBJDIR)/,ale_interface.o Settings.o agcd_interface.o)
+OBJS := $(addprefix $(OBJDIR)/,ale_interface.o Settings.o agcd_interface.o ColourPalette.o phosphor_blend.o)
 CXXFLAGS := -O3 -march=native -pipe -fPIC -pie $(CXXFLAGS) -std=c++11
 LDFLAGS := -lz -lpng -lm $(LDFLAGS)
 

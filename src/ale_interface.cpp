@@ -140,7 +140,8 @@ void ALEInterface::loadROM(std::string rom_file) {
     if (atariState != NULL) {
         delete atariState;
     }
-    atariState = new AtariState(rom_file);
+
+    atariState = new AtariState(rom_file, getBool("color_averaging"));
     romPath = rom_file;
     minimalActions.clear();
     allActions.clear();
@@ -188,7 +189,10 @@ bool ALEInterface::game_over() const {
 
 void ALEInterface::reset_game() {
     if (romPath.size() > 0) {
-        atariState = new AtariState(romPath);
+        if (atariState != NULL) {
+            delete atariState;
+        }
+        atariState = new AtariState(romPath, getBool("color_averaging"));
     }
 }
 

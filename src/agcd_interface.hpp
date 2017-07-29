@@ -15,14 +15,16 @@
 class AtariState {
 
 private:
-    typedef struct {
+    struct agcd_frame_t {
         unsigned frame;
         reward_t reward;
         int score;
         bool terminal;
         Action action;
         std::string frame_path;
-    } agcd_frame_t;
+        ALEScreen screen;
+        agcd_frame_t() : screen(210, 160) {};
+    };
 
     AtariState();
     std::string base_path ;
@@ -30,12 +32,12 @@ private:
     char screen_path_template[MAX_PATH_LENGTH];
     std::vector<agcd_frame_t> frames;
     size_t current_frame;
-    ALEScreen screen;
-    inline void read_data();
+    inline void read_data(bool);
+    std::vector<pixel_t> previousScreen;
     inline void loadScreen(size_t offset);
 
 public:
-    AtariState(const std::string &path);
+    AtariState(const std::string &path, bool average);
     ~AtariState() {
         frames.clear();
     }
