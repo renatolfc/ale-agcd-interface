@@ -851,6 +851,7 @@ inline void AtariState::read_data() {
         frames.push_back(current);
         loadScreen(j++);
     }
+    fclose(fp);
 }
 
 size_t AtariState::getCurrentFrame() {
