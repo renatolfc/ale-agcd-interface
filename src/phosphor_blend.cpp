@@ -35,7 +35,7 @@ void PhosphorBlend::process(ALEScreen& screen, const std::vector<pixel_t> &previ
     uInt32 rgb = m_avg_palette[cv][pv];
 
     // Set the corresponding pixel in the array
-    screen.getArray()[i] = rgbToNTSC(rgb);
+    screen.m_pixels[i] = rgbToNTSC(rgb);
   }
 }
 

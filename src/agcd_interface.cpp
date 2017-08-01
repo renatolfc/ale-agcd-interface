@@ -5,17 +5,12 @@
 #include <cstdlib>
 #include <cstdio>
 #include <string.h>
-#include <dirent.h>
-#include <libgen.h>
-#include <unistd.h>
-#include <sys/stat.h>
 
 #include <png.h>
 
 #include <vector>
 #include <string>
 #include <iostream>
-#include <algorithm>
 #include <sstream>
 #include <fstream>
 
@@ -640,34 +635,6 @@ static pixel_t rgb_to_ntsc_index(png_bytep pixel) { /* {{{ */
     return 0;
 } /* }}} */
 
-static inline int path_to_number(const char *path) {
-    int ret;
-    register int start = 0, end = strlen(path);
-    for (; path[end] != '.' && end >= 0; end--);
-    if (path[end] != '.') {
-        printf("Found invalid path %s", path);
-        abort();
-    }
-    for (start = end; path[start] != '/' && start >= 0; start--);
-    if (path[start] != '/') {
-        printf("Found invalid path %s", path);
-        abort();
-    }
-    end--;
-    start++;
-    int len = end - start + 1;
-    char *tmp = (char *) malloc(sizeof(char) * len);
-    strncpy(tmp, path + start, len);
-    tmp[len] = 0;
-    ret = atoi(tmp);
-    free(tmp);
-    return ret;
-}
-
-static inline bool numeric_file_name_comparison(std::string a, std::string b) {
-    return path_to_number(a.c_str()) < path_to_number(b.c_str());
-}
-
 static inline void process_png_file(std::vector<pixel_t> &screen, png_data_t
 data) {
     for (register int y = 0; y < data.height; y++) {
@@ -680,26 +647,6 @@ data) {
     }
 }
 
-static inline std::vector<std::string> listdir(const char *path) {
-    DIR *dir;
-    struct dirent *ent;
-    std::string prefix(path);
-    std::vector<std::string> ret;
-    if ((dir = opendir(path)) != NULL) {
-        while ((ent = readdir(dir)) != NULL) {
-            if (ent->d_name[0] == '.')
-                continue;
-            std::string filename(ent->d_name);
-            ret.push_back(prefix + "/" + filename);
-        }
-        closedir(dir);
-    } else {
-        perror("Could not open directory");
-    }
-
-    return ret;
-}
-
 static inline void free_png_data(png_data_t data) {
     if (data.row_pointers) {
         if (data.row_pointers[0]) {
@@ -709,11 +656,6 @@ static inline void free_png_data(png_data_t data) {
         }
         free(data.row_pointers);
     }
-}
-
-static inline bool file_exists(const std::string& name) {
-    struct stat buffer;
-    return (stat (name.c_str(), &buffer) == 0);
 }
 
 static std::string abspath(const std::string &path) {
@@ -738,18 +680,28 @@ static inline int episode_number(const std::string &path) {
     return atoi(path.c_str() + offset + 1);
 }
 
-AtariState::AtariState(const std::string &path, bool average) : base_path(abspath(path)),
-                                                                current_frame(0)
-{
+AtariState::AtariState(const std::string &path, bool average, int episodeIndex) :
+        base_path(abspath(path)), current_frame(0) {
     std::vector<std::string> screens;
     if (strstr(base_path.c_str(), SCREENS) == NULL) {
-        screens = listdir((base_path + path_separator + SCREENS).c_str());
+        screens = agcd_listdir((base_path + path_separator + SCREENS).c_str());
     } else {
-        screens = listdir(base_path.c_str());
+        screens = agcd_listdir(base_path.c_str());
     }
 
     auto screen_path = *select_randomly(screens.begin(), screens.end());
-    int episode = episode_number(screen_path);
+    int episode;
+    if (episodeIndex >= 0) {
+        if (episodeIndex >= screens.size() - 1) {
+            episodeIndex = screens.size() - 1;
+            printf("episodeIndex = %d, screens.size() = %d\n", episodeIndex, screens.size());
+            loadedLast = true;
+        }
+        screen_path = screens[episodeIndex];
+        episode = path_to_number(screen_path.c_str());
+    } else {
+        episode = episode_number(screen_path);
+    }
     assert(episode >= 0);
 
     char episode_str[16];
@@ -760,7 +712,7 @@ AtariState::AtariState(const std::string &path, bool average) : base_path(abspat
                 path_separator + episode_str + ".txt";
     }
 
-    std::cout << "Reading episode " << base_path << std::endl;
+    std::cout << "Reading episode " << base_path << "...";
 
     char *tmp = strdup(base_path.c_str());
     if (base_path.size() && tmp[base_path.size()-1] == '/') {
@@ -785,6 +737,8 @@ AtariState::AtariState(const std::string &path, bool average) : base_path(abspat
     free(tmp);
 
     read_data(average);
+
+    std::cout << " done! " << std::endl;
 }
 
 inline static char *get_line(char *str, size_t strsize, FILE *fp) {

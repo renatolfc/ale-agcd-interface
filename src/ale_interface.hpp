@@ -166,6 +166,8 @@ protected:
     ActionVect minimalActions;
     ActionVect allActions;
     int frame_skip = 1;
+    int current_episode;
+    bool sequential = false;
 
 public:
     // Display ALE welcome message

@@ -1,6 +1,7 @@
 #include "ale_interface.hpp"
 
 #include <iostream>
+#include <utility>
 
 const Action SPACE_INVADERS_MINIMAL[] = {
         PLAYER_A_NOOP, PLAYER_A_LEFT, PLAYER_A_RIGHT, PLAYER_A_FIRE,
@@ -75,6 +76,13 @@ int ALEInterface::getInt(const std::string& key) {
 }
 
 bool ALEInterface::getBool(const std::string& key) {
+    if (key == "loadedLast") {
+        if (atariState != NULL) {
+            return atariState->hasLoadedLastEpisode();
+        } else {
+            return true;
+        }
+    }
     assert(theSettings.get());
     return theSettings->getBool(key);
 }
@@ -97,6 +105,10 @@ void ALEInterface::setInt(const std::string& key, const int value) {
 }
 
 void ALEInterface::setBool(const std::string& key, const bool value) {
+    if (key == "sequential_processing") {
+        sequential = true;
+        return;
+    }
     assert(theSettings.get());
     theSettings->setBool(key, value);
     theSettings->validate();
@@ -141,7 +153,12 @@ void ALEInterface::loadROM(std::string rom_file) {
         delete atariState;
     }
 
-    atariState = new AtariState(rom_file, getBool("color_averaging"));
+    current_episode = 0;
+    if (sequential) {
+        atariState = new AtariState(rom_file, getBool("color_averaging"), 0);
+    } else {
+        atariState = new AtariState(rom_file, getBool("color_averaging"));
+    }
     romPath = rom_file;
     minimalActions.clear();
     allActions.clear();
@@ -179,6 +196,8 @@ void ALEInterface::loadROM(std::string rom_file) {
         printf("Unknown ROM found. Loading default actions...\n");
         minimalActions = allActions;
     }
+
+    setString("rom_file", rom_file);
 }
 
 bool ALEInterface::game_over() const {
@@ -192,7 +211,11 @@ void ALEInterface::reset_game() {
         if (atariState != NULL) {
             delete atariState;
         }
-        atariState = new AtariState(romPath, getBool("color_averaging"));
+        if (sequential) {
+            atariState = new AtariState(romPath, getBool("color_averaging"), ++current_episode);
+        } else {
+            atariState = new AtariState(romPath, getBool("color_averaging"));
+        }
     }
 }
 
