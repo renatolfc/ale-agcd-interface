@@ -60,6 +60,12 @@ public:
     bool hasLoadedLastEpisode() {
         return loadedLast;
     }
+    int height() {
+        return 210;
+    }
+    int width() {
+        return 160;
+    }
 };
 
 static inline int path_to_number(const char *path) {

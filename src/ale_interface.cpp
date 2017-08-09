@@ -40,12 +40,18 @@ reward_t ALEInterface::act(Action action) {
         reward += atariState->getNextReward();
         atariState->step();
     }
+    if (displayScreen) {
+        displayScreen->display_screen();
+    }
     return reward;
 }
 
 ALEInterface::~ALEInterface() {
     if (atariState != NULL) {
         delete atariState;
+    }
+    if (displayScreen != NULL) {
+        delete displayScreen;
     }
 }
 
@@ -54,7 +60,7 @@ ALEInterface::ALEInterface() {
     setInt("frame_skip", 1);
 }
 
-ALEInterface::ALEInterface(bool display_screen) {
+ALEInterface::ALEInterface(bool display_screen) : display_screen(display_screen) {
     theSettings.reset(new Settings);
 }
 
@@ -198,23 +204,36 @@ void ALEInterface::loadROM(std::string rom_file) {
     }
 
     setString("rom_file", rom_file);
+
+    if (display_screen) {
+        palette.setPalette("standard", "NTSC");
+        displayScreen = new DisplayScreen(atariState, palette);
+    }
 }
 
 bool ALEInterface::game_over() const {
     if (atariState == NULL)
         return false;
-    return atariState->isTerminal();
+    return atariState->isTerminal() || atariState->hasLoadedLastEpisode();
 }
 
 void ALEInterface::reset_game() {
     if (romPath.size() > 0) {
         if (atariState != NULL) {
+            if (atariState->hasLoadedLastEpisode()) {
+                // We want the agent to stop now
+                return;
+            }
             delete atariState;
         }
         if (sequential) {
             atariState = new AtariState(romPath, getBool("color_averaging"), ++current_episode);
         } else {
             atariState = new AtariState(romPath, getBool("color_averaging"));
+        }
+        if (displayScreen != NULL) {
+            delete displayScreen;
+            displayScreen = new DisplayScreen(atariState, palette);
         }
     }
 }

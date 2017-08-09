@@ -40,6 +40,7 @@
 #include "ale_screen.hpp"
 #include "ale_ram.hpp"
 #include "Settings.hpp"
+#include "display_screen.h"
 #include "agcd_interface.hpp"
 
 static const std::string Version = "0.5.1";
@@ -167,7 +168,10 @@ protected:
     ActionVect allActions;
     int frame_skip = 1;
     int current_episode;
+    ColourPalette palette;
     bool sequential = false;
+    bool display_screen = false;
+    DisplayScreen *displayScreen = NULL;
 
 public:
     // Display ALE welcome message

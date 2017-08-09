@@ -771,7 +771,8 @@ inline void AtariState::read_data(bool average) {
 
     int i;
     size_t j = 0;
-    while (get_line(buffer, 512, fp) != NULL) {
+    bool keep_processing = true;
+    while (keep_processing && get_line(buffer, 512, fp) != NULL) {
         char tmp[16];
         agcd_frame_t current;
         i = sscanf(buffer, "%d,%d, %d, %s %d\n",
@@ -798,6 +799,9 @@ inline void AtariState::read_data(bool average) {
         } else {
             if (!last_accessible_path.empty()) {
                 current.frame_path = last_accessible_path;
+                frames[j-1].terminal = true;
+                current.terminal = true;
+                keep_processing = false;
             } else {
                 // This is the first file and it doesn't exist. Bummer.
                 abort();
