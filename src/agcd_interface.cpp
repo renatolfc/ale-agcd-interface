@@ -759,6 +759,10 @@ inline static char *get_line(char *str, size_t strsize, FILE *fp) {
 }
 
 inline void AtariState::read_data(bool average) {
+    if (loadedLast) {
+        return;
+    }
+
     char c;
     char buffer[512];
     FILE *fp = fopen(base_path.c_str(), "r");
