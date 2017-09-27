@@ -33,4 +33,7 @@ $(LIBALE): $(OBJS)
 clean:
 	rm -fr $(OBJDIR) $(LIBALE)
 
+tools:
+	make -C tools
+
 ale: $(LIBALE)
