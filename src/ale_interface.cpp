@@ -98,7 +98,13 @@ int ALEInterface::getInt(const std::string& key) {
         return atariState->getCurrentAction();
     }
     if (key == "next_action" && atariState != NULL) {
-        return atariState->getNextAction();
+        int ret = atariState->getNextAction();
+        printf("Action: %d - Minimal: %d\n", ret, minimalActionCache[ret]);
+        if (minimalActionCache[ret]) {
+            return ret;
+        } else {
+            return PLAYER_A_NOOP;
+        }
     }
     assert(theSettings.get());
     return theSettings->getInt(key);
@@ -195,6 +201,7 @@ void ALEInterface::loadROM(std::string rom_file) {
         atariState = new AtariState(romPath, gameName, getBool("color_averaging"), *h5Wrapper, phosphor);
     }
 
+    memset(&minimalActionCache, 0, sizeof(minimalActionCache));
     minimalActions.clear();
     allActions.clear();
 
@@ -230,6 +237,11 @@ void ALEInterface::loadROM(std::string rom_file) {
     } else {
         printf("Unknown ROM found. Loading default actions...\n");
         minimalActions = allActions;
+    }
+
+    for (register size_t i = 0; i < minimalActions.size(); i++) {
+        // Fill our cache for computing minimal actions
+        minimalActionCache[minimalActions[i]] = true;
     }
 
     setString("rom_file", rom_file);

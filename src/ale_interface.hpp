@@ -181,6 +181,7 @@ protected:
     DisplayScreen *displayScreen = NULL;
     H5Wrapper *h5Wrapper = NULL;
     PhosphorBlend phosphor;
+    bool minimalActionCache[PLAYER_B_MAX];
 
 public:
     // Display ALE welcome message
