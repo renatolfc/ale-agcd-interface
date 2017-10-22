@@ -29,6 +29,8 @@ class PhosphorBlend {
 
     void process(ALEScreen& screen, const std::vector<pixel_t> &previous, const std::vector<pixel_t> &current);
 
+    void process(std::vector<pixel_t> &screen, const std::vector<pixel_t> &previous, const std::vector<pixel_t> &current);
+
   private:
     void makeAveragePalette();
     uInt8 getPhosphor(uInt8 v1, uInt8 v2);

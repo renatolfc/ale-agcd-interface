@@ -45,6 +45,12 @@
 
 static const std::string Version = "0.5.1";
 
+#ifdef WIN32
+const char path_separator = '\\';
+#else
+const char path_separator = '/';
+#endif
+
 typedef int reward_t;
 
 class ALEState{};
@@ -162,6 +168,7 @@ protected:
     std::unique_ptr<Settings> theSettings;
     int max_num_frames; // Maximum number of frames for each episode
     AtariState *atariState = NULL;
+    std::string gameName;
     std::string romPath;
     ALERAM fakeRam;
     ActionVect minimalActions;
@@ -172,6 +179,8 @@ protected:
     bool sequential = false;
     bool display_screen = false;
     DisplayScreen *displayScreen = NULL;
+    H5Wrapper *h5Wrapper = NULL;
+    PhosphorBlend phosphor;
 
 public:
     // Display ALE welcome message

@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+#include "phosphor_blend.hpp"
+#include "hdf5_wrapper.hpp"
 #include "ale_screen.hpp"
 #include "Constants.h"
 
@@ -22,32 +24,21 @@
 class AtariState {
 
 private:
-    struct agcd_frame_t {
-        unsigned frame;
-        reward_t reward;
-        int score;
-        bool terminal;
-        Action action;
-        std::string frame_path;
-        ALEScreen screen;
-        agcd_frame_t() : screen(210, 160) {};
-    };
-
     AtariState();
-    std::string base_path ;
+    std::string base_path;
     char base_name[MAX_BASE_LENGTH];
     char screen_path_template[MAX_PATH_LENGTH];
-    std::vector<agcd_frame_t> frames;
+    trajectory_t trajectory;
     size_t current_frame;
-    inline void read_data(bool);
     std::vector<pixel_t> previousScreen;
-    inline void loadScreen(size_t offset);
     bool loadedLast = false;
+    H5Wrapper &h5Wrapper;
+    ALEScreen aleScreen;
+    PhosphorBlend &phosphor;
 
 public:
-    AtariState(const std::string &path, bool average, int episodeIndex=-1);
+    AtariState(const std::string &path, const std::string &game, bool average, H5Wrapper &h5Wrapper, PhosphorBlend &phosphor, int episodeIndex=-1);
     ~AtariState() {
-        frames.clear();
     }
 
     size_t getCurrentFrame();
@@ -118,7 +109,10 @@ static inline std::vector<std::string> agcd_listdir(const char *path) {
 
 static inline bool file_exists(const std::string& name) {
     struct stat buffer;
-    return (stat (name.c_str(), &buffer) == 0);
+    if (stat(name.c_str(), &buffer) == 0) {
+        return S_ISREG(buffer.st_mode);
+    }
+    return false;
 }
 
 #endif //ALE_ATARI_GRAND_CHALLENGE_ATARI_GRAND_CHALLENGE_INTERFACE_HPP

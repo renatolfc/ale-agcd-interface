@@ -34,6 +34,26 @@ const Action PINBALL_MINIMAL[] = {
         PLAYER_A_LEFTFIRE,
 };
 
+static void split_rom_game_path(const std::string &rom_file, std::string &h5file, std::string &game) {
+    for (size_t i = 1; i < rom_file.size(); i++) {
+        if (rom_file[i] == path_separator) {
+            if (file_exists(rom_file.substr(0, i))) {
+                // We have a file. Assume the rest is the game name
+                h5file = rom_file.substr(0, i);
+                if (rom_file.size()-1 > i+1) {
+                    game = rom_file.substr(i+1, rom_file.size()-1);
+                } else {
+                    game = "";
+                }
+                return;
+            }
+        }
+    }
+    // If we're here, no substrings are valid paths...
+    h5file = rom_file;
+    game = "";
+}
+
 reward_t ALEInterface::act(Action action) {
     reward_t reward = 0;
     for (size_t i = 0; i < frame_skip; i++) {
@@ -52,6 +72,9 @@ ALEInterface::~ALEInterface() {
     }
     if (displayScreen != NULL) {
         delete displayScreen;
+    }
+    if (h5Wrapper != NULL) {
+        delete h5Wrapper;
     }
 }
 
@@ -158,14 +181,20 @@ void ALEInterface::loadROM(std::string rom_file) {
     if (atariState != NULL) {
         delete atariState;
     }
+    if (h5Wrapper != NULL) {
+        delete h5Wrapper;
+    }
+
+    split_rom_game_path(rom_file, romPath, gameName);
+    h5Wrapper = new H5Wrapper(romPath.c_str());
 
     current_episode = 0;
     if (sequential) {
-        atariState = new AtariState(rom_file, getBool("color_averaging"), 0);
+        atariState = new AtariState(romPath, gameName, getBool("color_averaging"), *h5Wrapper, phosphor, 0);
     } else {
-        atariState = new AtariState(rom_file, getBool("color_averaging"));
+        atariState = new AtariState(romPath, gameName, getBool("color_averaging"), *h5Wrapper, phosphor);
     }
-    romPath = rom_file;
+
     minimalActions.clear();
     allActions.clear();
 
@@ -178,23 +207,23 @@ void ALEInterface::loadROM(std::string rom_file) {
         allActions.push_back((Action) i);
     }
 
-    if (rom_file.find("mspacman") != std::string::npos) {
+    if (gameName == "mspacman") {
         printf("Loading Ms. PacMan actions...\n");
         minimalActions = ActionVect(std::begin(MS_PACMAN_MINIMAL), std::end
                 (MS_PACMAN_MINIMAL));
-    } else if (rom_file.find("pinball") != std::string::npos) {
+    } else if (gameName == "pinball") {
         printf("Loading Pinball actions...\n");
         minimalActions = ActionVect(std::begin(PINBALL_MINIMAL), std::end
                 (PINBALL_MINIMAL));
-    } else if (rom_file.find("qbert") != std::string::npos) {
+    } else if (gameName == "qbert") {
         printf("Loading QBert actions...\n");
         minimalActions = ActionVect(std::begin(Q_BERT_MINIMAL), std::end
                 (Q_BERT_MINIMAL));
-    } else if (rom_file.find("revenge") != std::string::npos) {
+    } else if (gameName == "revenge") {
         printf("Loading Montezuma's Revenge actions...\n");
         minimalActions = ActionVect(std::begin(REVENGE_MINIMAL), std::end
                 (REVENGE_MINIMAL));
-    } else if (rom_file.find("spaceinvaders") != std::string::npos) {
+    } else if (gameName == "spaceinvaders") {
         printf("Loading Space Invaders actions...\n");
         minimalActions = ActionVect(std::begin(SPACE_INVADERS_MINIMAL),
                        std::end(SPACE_INVADERS_MINIMAL));
@@ -227,9 +256,9 @@ void ALEInterface::reset_game() {
             delete atariState;
         }
         if (sequential) {
-            atariState = new AtariState(romPath, getBool("color_averaging"), ++current_episode);
+            atariState = new AtariState(romPath, gameName, getBool("color_averaging"), *h5Wrapper, phosphor, ++current_episode);
         } else {
-            atariState = new AtariState(romPath, getBool("color_averaging"));
+            atariState = new AtariState(romPath, gameName, getBool("color_averaging"), *h5Wrapper, phosphor);
         }
         if (displayScreen != NULL) {
             delete displayScreen;

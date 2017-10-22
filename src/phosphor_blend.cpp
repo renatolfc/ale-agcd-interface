@@ -1,8 +1,8 @@
 /* *****************************************************************************
  * A.L.E (Arcade Learning Environment)
- * Copyright (c) 2009-2013 by Yavar Naddaf, Joel Veness, Marc G. Bellemare and 
+ * Copyright (c) 2009-2013 by Yavar Naddaf, Joel Veness, Marc G. Bellemare and
  *   the Reinforcement Learning and Artificial Intelligence Laboratory
- * Released under the GNU General Public License; see License.txt for details. 
+ * Released under the GNU General Public License; see License.txt for details.
  *
  * Based on: Stella  --  "An Atari 2600 VCS Emulator"
  * Copyright (c) 1995-2007 by Bradford W. Mott and the Stella team
@@ -11,7 +11,7 @@
  *  phosphor_blend.cpp
  *
  *  Methods for performing colour averaging over the screen.
- *  
+ *
  **************************************************************************** */
 
 #include "phosphor_blend.hpp"
@@ -27,15 +27,29 @@ PhosphorBlend::PhosphorBlend() {
 
 void PhosphorBlend::process(ALEScreen& screen, const std::vector<pixel_t> &previous_buffer, const std::vector<pixel_t> &current_buffer) {
   // Process each pixel in turn
-  for (size_t i = 0; i < screen.arraySize(); i++) { 
+  for (size_t i = 0; i < screen.arraySize(); i++) {
     int cv = current_buffer[i];
     int pv = previous_buffer[i];
-    
-    // Find out the corresponding rgb color 
+
+    // Find out the corresponding rgb color
     uInt32 rgb = m_avg_palette[cv][pv];
 
     // Set the corresponding pixel in the array
     screen.m_pixels[i] = rgbToNTSC(rgb);
+  }
+}
+
+void PhosphorBlend::process(std::vector<pixel_t>& screen, const std::vector<pixel_t> &previous_buffer, const std::vector<pixel_t> &current_buffer) {
+  // Process each pixel in turn
+  for (size_t i = 0; i < screen.size(); i++) {
+    int cv = current_buffer[i];
+    int pv = previous_buffer[i];
+
+    // Find out the corresponding rgb color
+    uInt32 rgb = m_avg_palette[cv][pv];
+
+    // Set the corresponding pixel in the array
+    screen[i] = rgbToNTSC(rgb);
   }
 }
 
@@ -54,11 +68,11 @@ void PhosphorBlend::makeAveragePalette() {
       m_avg_palette[c1][c2] = makeRGB(r, g, b);
     }
   }
-  
+
   // Also make a RGB to NTSC color map. We drop the lowest two bits to speed
   // the initialization a little. TODO(mgbellemare): Find a better solution.
   for (int r = 0; r < 256; r += 4) {
-    for (int g = 0; g < 256; g += 4) {  
+    for (int g = 0; g < 256; g += 4) {
       for (int b = 0; b < 256; b += 4) {
         // For each RGB point, we find its closest NTSC match
         int minDist = 256 * 3 + 1;
