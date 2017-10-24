@@ -99,7 +99,6 @@ int ALEInterface::getInt(const std::string& key) {
     }
     if (key == "next_action" && atariState != NULL) {
         int ret = atariState->getNextAction();
-        printf("Action: %d - Minimal: %d\n", ret, minimalActionCache[ret]);
         if (minimalActionCache[ret]) {
             return ret;
         } else {
