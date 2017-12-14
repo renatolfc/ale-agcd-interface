@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <cstring>
+#include <cmath>
 #include <algorithm>
 #include <sys/stat.h>
 
@@ -365,6 +366,29 @@ static inline png_data_t read_png_file(const char *filename) { /* {{{ */
 
     return data;
 } /* }}} */
+
+static inline double distance(png_bytep pixel, pixel_t r, pixel_t g, pixel_t b) {
+    // return abs(((pixel_t)pixel[0]) - r) + abs((pixel_t)(pixel[1]) - g) + abs(((pixel_t)pixel[2]) - b);
+    return (
+        (pixel[0] - r) * (pixel[0] - r) +
+        (pixel[1] - g) * (pixel[1] - g) +
+        (pixel[2] - b) * (pixel[2] - b)
+    );
+}
+
+static inline int heuristic_pixel_search(png_bytep pixel) {
+    int index = 0;
+    double min_distance = 9999999999;
+    for (register size_t i = 0, j = 0; i < 256 * 3; i += 6, j+=2) {
+        pixel_t r = NTSC_palette[i], g = NTSC_palette[i+1], b = NTSC_palette[i+2];
+        double d = distance(pixel, r, g, b);
+        if (d < min_distance) {
+            index = j;
+            min_distance = d;
+        }
+    }
+    return index;
+}
 
 static pixel_t rgb_to_ntsc_index(png_bytep pixel) { /* {{{ */
     if (pixel[0] == 0 && pixel[1] == 0 && pixel[2] == 0) {
@@ -879,7 +903,7 @@ static pixel_t rgb_to_ntsc_index(png_bytep pixel) { /* {{{ */
         return 254;
     }
 
-    return 0;
+    return heuristic_pixel_search(pixel);
 } /* }}} */
 
 static inline void process_png_file(pixel_t *screen, png_data_t data) {
