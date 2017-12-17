@@ -1141,6 +1141,7 @@ static herr_t write_dataset(hid_t loc_id, const char *dset_name, int rank,
 static inline int create_dataset(const std::string &game, const std::string &trajectory, const std::vector<std::string> &screens, std::vector<agcd_frame_t> events, hid_t screen_group, const hid_t event_group) {
     pixel_t *buffer = (pixel_t *) malloc(sizeof(pixel_t) * WIDTH * HEIGHT * screens.size());
     pixel_t *p = buffer;
+    int ret = 0;
     std::string prefix = "screens/" + game + "/" + trajectory + "/";
     for (size_t i = 0; i < screens.size(); i++, p += (WIDTH * HEIGHT)) {
         load_screen((prefix + screens[i]).c_str(), p);
@@ -1149,16 +1150,27 @@ static inline int create_dataset(const std::string &game, const std::string &tra
     const char *trajectory_str = trajectory.c_str();
     hsize_t dims[3] = {HEIGHT, WIDTH, screens.size()};
     herr_t status = write_dataset(screen_group, trajectory_str, 3, dims, H5T_NATIVE_UCHAR, buffer);
+    if (status < 0) {
+        std::cerr << "Failed to write screen dataset for trajectory " << trajectory_str << std::endl;
+        ret = 1;
+    }
 
     dims[1] = 5;
     dims[0] = screens.size();
     agcd_frame_t *frames = &events[0];
     status = write_dataset(event_group, trajectory_str, 2, dims, H5T_NATIVE_INT, frames);
+    if (status < 0) {
+        std::cerr << "Failed to write event dataset for trajectory " << trajectory_str << std::endl;
+        ret = 1;
+    }
 
     free(buffer);
+
+    return ret;
 }
 
 static inline int create_datasets(const std::string &game, const std::vector<std::string> &trajectories, const hid_t screen_group, const hid_t event_group) {
+    int ret = 0;
     for (size_t i = 0; i < trajectories.size(); i++) {
         std::vector<std::string> screens = agcd_listdir(("screens/" + game + "/" + trajectories[i]).c_str(), false, true);
         std::vector<agcd_frame_t> events = read_events(("trajectories/" + game + "/" + trajectories[i] + ".txt").c_str());
@@ -1168,8 +1180,9 @@ static inline int create_datasets(const std::string &game, const std::vector<std
             continue;
         }
 
-        create_dataset(game, trajectories[i], screens, events, screen_group, event_group);
+        ret = ret | create_dataset(game, trajectories[i], screens, events, screen_group, event_group);
     }
+    return ret;
 }
 
 int main(int argc, char *argv[]) {
@@ -1198,7 +1211,7 @@ int main(int argc, char *argv[]) {
     hsize_t palette_dims[2] = {256, 3};
     write_dataset(file_id, "/palette", 2, palette_dims, H5T_NATIVE_UCHAR, NTSC_palette);
 
-    for (int i = 0; i < games.size(); i++) {
+    for (size_t i = 0; i < games.size(); i++) {
         hid_t group_id = H5Gcreate(file_id, ("/" + games[i]).c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
         hid_t event_id = H5Gcreate(group_id, "trajectories", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
         hid_t screen_id = H5Gcreate(group_id, "screens", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -1211,4 +1224,6 @@ int main(int argc, char *argv[]) {
     }
 
     H5Fclose(file_id);
+
+    return EXIT_SUCCESS;
 }
