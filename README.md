@@ -44,7 +44,9 @@ original data and that works *way* faster for "sequential" access:
 
 ```
 $ du -hs atari_v2_release atari_v2.tar.gz atari-grand-challenge-dataset-v2.h5
-
+126G    atari_v2_release
+26G     atari_v2.tar.gz
+16G     atari-grand-challenge-dataset-v2.h5
 ```
 
 Once built, the HDF5 will have a tree-like structure. At the top level you will
