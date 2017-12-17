@@ -22,6 +22,7 @@
 
 static const int WIDTH = 160;
 static const int HEIGHT = 210;
+static const char *DELIMITER = ", \n";
 static const int MAX_PATH_LENGTH = 2048;
 
 typedef unsigned char pixel_t;
@@ -989,8 +990,51 @@ inline static char *get_line(char *str, size_t strsize, FILE *fp) {
     }
 }
 
+inline static bool parse_line(agcd_frame_t &current, char *buffer) {
+    char *saveptr, *token;
+
+    token = strtok_r(buffer, DELIMITER, &saveptr);
+    if (token == NULL) {
+        goto bail_parse;
+    }
+    current.frame = atoi(token);
+
+    token = strtok_r(NULL, DELIMITER, &saveptr);
+    if (token == NULL) {
+        goto bail_parse;
+    }
+    current.reward = atoi(token);
+
+    token = strtok_r(NULL, DELIMITER, &saveptr);
+    if (token == NULL) {
+        goto bail_parse;
+    }
+    current.score = atoi(token);
+
+    token = strtok_r(NULL, DELIMITER, &saveptr);
+    if (token == NULL) {
+        goto bail_parse;
+    }
+    if (token[0] == 'f' || token[0] == 'F' || token[0] == '0') {
+        current.terminal = false;
+    } else {
+        current.terminal = true;
+    }
+
+    token = strtok_r(NULL, DELIMITER, &saveptr);
+    if (token == NULL) {
+        goto bail_parse;
+    }
+    current.action = atoi(token);
+    return true;
+
+bail_parse:
+    fprintf(stderr, "Failed to read token until completion. Expect "
+            "corrupted data.\n");
+    return false;
+}
+
 inline std::vector<agcd_frame_t> read_events(const std::string &base_path) {
-    char c;
     char buffer[512];
     FILE *fp = fopen(base_path.c_str(), "r");
     /* skip 2 lines {{{ */
@@ -1000,28 +1044,15 @@ inline std::vector<agcd_frame_t> read_events(const std::string &base_path) {
     std::string last_accessible_path;
     std::vector<agcd_frame_t> frames;
 
-    int i;
-    size_t j = 0;
     bool keep_processing = true;
     while (keep_processing && get_line(buffer, 512, fp) != NULL) {
-        char tmp[16];
         agcd_frame_t current;
-        i = sscanf(buffer, "%d,%d, %d, %s %d\n",
-               &current.frame,
-               &current.reward,
-               &current.score,
-               &tmp,
-               &current.action
-        );
-        if (i == EOF) {
+        if (parse_line(current, buffer)) {
+            frames.push_back(current);
+        } else {
+            fprintf(stderr, "Ignoring corrupted line: %s\n", buffer);
             continue;
         }
-        if (strncmp(tmp, "True", 4) == 0) {
-            current.terminal = true;
-        } else {
-            current.terminal = false;
-        }
-        frames.push_back(current);
     }
     fclose(fp);
 
